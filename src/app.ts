@@ -31,7 +31,7 @@ class App {
   public listen() {
     this.app.listen(this.port, () => {
       logger.info(`=================================`);
-      logger.info(`======= ENV: ${this.env} =======`);
+      logger.info(`======= ENV: ${this.env} ========`);
       logger.info(`🚀 App listening on the port ${this.port}`);
       logger.info(`=================================`);
     });
@@ -49,7 +49,7 @@ class App {
   private async connectToDatabase() {
     try {
       await prisma.$connect();
-      logger.info('Successfully connected to the database.');
+      logger.info('======== DB: Connected ==========');
     } catch (error) {
       logger.error('Failed to connect to the database:', error);
     }
