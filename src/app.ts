@@ -1,3 +1,7 @@
+import { CREDENTIALS, LOG_FORMAT, NODE_ENV, ORIGIN, PORT } from '@config';
+import { Routes } from '@interfaces/routes.interface';
+import errorMiddleware from '@middlewares/error.middleware';
+import { logger, stream } from '@utils/logger';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -5,12 +9,7 @@ import express from 'express';
 import helmet from 'helmet';
 import hpp from 'hpp';
 import morgan from 'morgan';
-import swaggerJSDoc from 'swagger-jsdoc';
-import swaggerUi from 'swagger-ui-express';
-import { NODE_ENV, PORT, LOG_FORMAT, ORIGIN, CREDENTIALS } from '@config';
-import { Routes } from '@interfaces/routes.interface';
-import errorMiddleware from '@middlewares/error.middleware';
-import { logger, stream } from '@utils/logger';
+import { prisma } from '@databases';
 
 class App {
   public app: express.Application;
@@ -23,8 +22,9 @@ class App {
     this.port = PORT || 3000;
 
     this.initializeMiddlewares();
+    this.connectToDatabase();
     this.initializeRoutes(routes);
-    this.initializeSwagger();
+    // this.initializeSwagger();
     this.initializeErrorHandling();
   }
 
@@ -38,7 +38,8 @@ class App {
   }
 
   public async closeDatabaseConnection(): Promise<void> {
-    // Database connection closed handled by prisma natively or can be added here
+    await prisma.$disconnect();
+    logger.info('Database connection closed.');
   }
 
   public getServer() {
@@ -46,7 +47,12 @@ class App {
   }
 
   private async connectToDatabase() {
-    // Prisma handles database connections natively dynamically
+    try {
+      await prisma.$connect();
+      logger.info('Successfully connected to the database.');
+    } catch (error) {
+      logger.error('Failed to connect to the database:', error);
+    }
   }
 
   private initializeMiddlewares() {
@@ -66,21 +72,21 @@ class App {
     });
   }
 
-  private initializeSwagger() {
-    const options = {
-      swaggerDefinition: {
-        info: {
-          title: 'REST API',
-          version: '1.0.0',
-          description: 'Example docs',
-        },
-      },
-      apis: ['swagger.yaml'],
-    };
+  // private initializeSwagger() {
+  //   const options = {
+  //     swaggerDefinition: {
+  //       info: {
+  //         title: 'REST API',
+  //         version: '1.0.0',
+  //         description: 'Example docs',
+  //       },
+  //     },
+  //     apis: ['swagger.yaml'],
+  //   };
 
-    const specs = swaggerJSDoc(options);
-    this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
-  }
+  //   const specs = swaggerJSDoc(options);
+  //   this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+  // }
 
   private initializeErrorHandling() {
     this.app.use(errorMiddleware);

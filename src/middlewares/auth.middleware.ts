@@ -15,7 +15,7 @@ const getAuthorization = (req: RequestWithUser) => {
   return null;
 };
 
-const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+const authMiddleware = async (req: RequestWithUser, _res: Response, next: NextFunction) => {
   try {
     const Authorization = getAuthorization(req);
 
@@ -25,7 +25,7 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
       const { adminId, userId } = verificationResponse;
 
       if (userId) {
-        const findUser = await prisma.user.findUnique({ where: { id: userId } });
+        const findUser = await prisma.user.findUnique({ where: { userId: userId } });
         if (findUser) {
           req.user = findUser;
           return next();
@@ -33,7 +33,7 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
       }
 
       if (adminId) {
-        const findAdmin = await prisma.superAdmin.findUnique({ where: { id: adminId } });
+        const findAdmin = await prisma.superAdmin.findUnique({ where: { superAdminId: adminId } });
         if (findAdmin) {
           req.admin = findAdmin;
           return next();

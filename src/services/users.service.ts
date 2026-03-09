@@ -16,7 +16,7 @@ class UserService {
   public async findUserById(userId: string): Promise<User> {
     if (isEmpty(userId)) throw new HttpException(400, 'UserId is empty');
 
-    const findUser: User = await this.users.findUnique({ where: { id: userId } });
+    const findUser: User = await this.users.findUnique({ where: { userId: userId } });
     if (!findUser) throw new HttpException(409, "User doesn't exist");
 
     return findUser;
@@ -39,7 +39,7 @@ class UserService {
 
     if (userData.email) {
       const findUser: User = await this.users.findUnique({ where: { email: userData.email } });
-      if (findUser && findUser.id !== userId) throw new HttpException(409, `This email ${userData.email} already exists`);
+      if (findUser && findUser.userId !== userId) throw new HttpException(409, `This email ${userData.email} already exists`);
     }
 
     if (userData.password) {
@@ -49,7 +49,7 @@ class UserService {
 
     try {
       const updateUserById: User = await this.users.update({
-        where: { id: userId },
+        where: { userId: userId },
         data: userData,
       });
       return updateUserById;
@@ -60,7 +60,7 @@ class UserService {
 
   public async deleteUser(userId: string): Promise<User> {
     try {
-      const deleteUserById: User = await this.users.delete({ where: { id: userId } });
+      const deleteUserById: User = await this.users.delete({ where: { userId: userId } });
       return deleteUserById;
     } catch {
       throw new HttpException(409, "User doesn't exist");
