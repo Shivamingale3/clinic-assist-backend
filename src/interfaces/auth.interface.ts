@@ -1,15 +1,18 @@
 import { Request } from 'express';
-import { User } from '@prisma/client';
+import { SuperAdmin, User } from '@prisma/client';
 
-export interface DataStoredInToken {
-  _id: string;
-}
+export type DataStoredInToken = {
+  userId: string | null;
+  adminId: string | null;
+  role: string;
+};
 
-export interface TokenData {
+export type TokenData = {
   token: string;
   expiresIn: number;
-}
+};
 
-export interface RequestWithUser extends Request {
-  user: User;
-}
+export type RequestWithUser = Request & {
+  user?: User;
+  admin?: SuperAdmin;
+};

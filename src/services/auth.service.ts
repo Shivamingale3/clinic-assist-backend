@@ -1,7 +1,7 @@
 import { hash, compare } from 'bcrypt';
 import { sign } from 'jsonwebtoken';
 import { SECRET_KEY } from '@config';
-import { CreateUserDto } from '@dtos/users.dto';
+import { CreateUserDto, LoginUserDto } from '@dtos/users.dto';
 import { HttpException } from '@exceptions/HttpException';
 import { DataStoredInToken, TokenData } from '@interfaces/auth.interface';
 import { User } from '@prisma/client';
@@ -23,7 +23,7 @@ class AuthService {
     return createUserData;
   }
 
-  public async login(userData: CreateUserDto): Promise<{ cookie: string; findUser: User }> {
+  public async login(userData: LoginUserDto): Promise<{ cookie: string; findUser: User }> {
     if (isEmpty(userData)) throw new HttpException(400, 'userData is empty');
 
     const findUser = await this.users.findUnique({ where: { email: userData.email } });
@@ -48,7 +48,7 @@ class AuthService {
   }
 
   public createToken(user: User): TokenData {
-    const dataStoredInToken: DataStoredInToken = { _id: user.id };
+    const dataStoredInToken: DataStoredInToken = { userId: user.id, adminId: null, role: user.role };
     const secretKey: string = SECRET_KEY;
     const expiresIn: number = 60 * 60;
 

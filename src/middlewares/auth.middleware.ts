@@ -5,27 +5,46 @@ import { HttpException } from '@exceptions/HttpException';
 import { DataStoredInToken, RequestWithUser } from '@interfaces/auth.interface';
 import { prisma } from '@databases';
 
+const getAuthorization = (req: RequestWithUser) => {
+  const cookie = req.cookies['Authorization'];
+  if (cookie) return cookie;
+
+  const header = req.header('Authorization');
+  if (header) return header.split('Bearer ')[1];
+
+  return null;
+};
+
 const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
-    const Authorization = req.cookies['Authorization'] || (req.header('Authorization') ? req.header('Authorization').split('Bearer ')[1] : null);
+    const Authorization = getAuthorization(req);
 
     if (Authorization) {
       const secretKey: string = SECRET_KEY;
       const verificationResponse = (await verify(Authorization, secretKey)) as DataStoredInToken;
-      const userId = verificationResponse._id;
-      const findUser = await prisma.user.findUnique({ where: { id: userId } });
+      const { adminId, userId } = verificationResponse;
 
-      if (findUser) {
-        req.user = findUser;
-        next();
-      } else {
-        next(new HttpException(401, 'Wrong authentication token'));
+      if (userId) {
+        const findUser = await prisma.user.findUnique({ where: { id: userId } });
+        if (findUser) {
+          req.user = findUser;
+          return next();
+        }
       }
-    } else {
-      next(new HttpException(404, 'Authentication token missing'));
+
+      if (adminId) {
+        const findAdmin = await prisma.superAdmin.findUnique({ where: { id: adminId } });
+        if (findAdmin) {
+          req.admin = findAdmin;
+          return next();
+        }
+      }
+      return next(new HttpException(401, 'Wrong authentication token'));
     }
+
+    return next(new HttpException(404, 'Authentication token missing'));
   } catch (error) {
-    next(new HttpException(401, 'Wrong authentication token'));
+    return next(new HttpException(401, 'Wrong authentication token'));
   }
 };
 

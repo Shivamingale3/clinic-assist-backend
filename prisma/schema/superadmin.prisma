@@ -1,0 +1,11 @@
+model SuperAdmin {
+  id        String   @id @default(cuid())
+  fullName  String   @map("full_name")
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("super_admins")
+}
